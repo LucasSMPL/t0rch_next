@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
-	"io"
+	"log"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/icholy/digest"
 	"github.com/spf13/cobra"
@@ -28,6 +30,10 @@ var scanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Scan a range of IP addresses",
 	Run: func(cmd *cobra.Command, args []string) {
+		startTime := time.Now()
+		defer func() {
+			fmt.Println("Execution Time: ", time.Since(startTime))
+		}()
 		start, _ := cmd.Flags().GetIP("start")
 		end, _ := cmd.Flags().GetIP("end")
 
@@ -77,9 +83,14 @@ func makeAPICalls(client *http.Client, start, end net.IP) error {
 			continue
 		}
 		defer res.Body.Close()
-		bodyBytes, _ := io.ReadAll(res.Body)
 
-		fmt.Printf("IP: %s - API call status: %s\n", ip, bodyBytes)
+		var ipSummary IpSummary
+		err = json.NewDecoder(res.Body).Decode(&ipSummary)
+		if err != nil {
+			log.Println(err)
+		}
+
+		fmt.Printf("IP: %s - API call status: %s\n", ip, ipSummary.Status.Status)
 	}
 
 	return nil
@@ -98,4 +109,51 @@ func incrementIP(ip net.IP) net.IP {
 	}
 
 	return nextIP
+}
+
+type IpSummary struct {
+	Status struct {
+		Status     string `json:"STATUS"`
+		When       int    `json:"when"`
+		Msg        string `json:"Msg"`
+		ApiVersion string `json:"api_version"`
+	} `json:"STATUS"`
+	Info struct {
+		MinerVersion string `json:"miner_version"`
+		CompileTime  string `json:"CompileTime"`
+		Type         string `json:"type"`
+	} `json:"INFO"`
+	Summary []struct {
+		Elapsed   int     `json:"elapsed"`
+		Rate_5s   float64 `json:"rate_5s"`
+		Rate_30m  float64 `json:"rate_30m"`
+		RateAvg   float64 `json:"rate_avg"`
+		RateIdeal float64 `json:"rate_ideal"`
+		RateUnit  string  `json:"rate_unit"`
+		HwAll     int     `json:"hw_all"`
+		BestShare int     `json:"bestshare"`
+		Status    []struct {
+			Type   string `json:"type"`
+			Status string `json:"status"`
+			Code   int    `json:"code"`
+			Msg    string `json:"msg"`
+		} `json:"status"`
+	} `json:"SUMMARY"`
+}
+
+type ScannedIp struct {
+	// Id             int
+	Ip             string
+	MinerType      string
+	Worker         string
+	Uptime         int
+	Hashrate       int
+	FanCount       int
+	HbCount        int
+	PowerType      string
+	Controller     string
+	IsUnderhashing bool
+	IsFound        bool
+	HashboardType  string
+	PsuFailure     bool
 }
