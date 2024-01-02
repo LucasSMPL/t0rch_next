@@ -94,7 +94,7 @@ func getMinerOnIp(client *http.Client, ip net.IP) (*IpSummary, error) {
 	fullURL := fmt.Sprintf("http://%s%s", ip, apiEndpoint)
 	res, err := client.Get(fullURL)
 	if err != nil {
-		fmt.Printf("IP: %s - API call failed: %v\n", ip, err)
+		// fmt.Printf("IP: %s - API call failed: %v\n", ip, err)
 		return nil, err
 	}
 	defer res.Body.Close()
@@ -106,7 +106,7 @@ func getMinerOnIp(client *http.Client, ip net.IP) (*IpSummary, error) {
 		return nil, err
 	}
 
-	fmt.Printf("IP: %s - API call status: %s\n", ip, ipSummary.Status.Status)
+	// fmt.Printf("IP: %s - API call status: %s\n", ip, ipSummary.Status.Status)
 	// fmt.Fprintf(w, fs, ip.String(), ipSummary.Status.Status, "p.Status")
 
 	return &ipSummary, nil
