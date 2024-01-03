@@ -14,6 +14,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/icholy/digest"
 	"github.com/spf13/cobra"
@@ -30,6 +31,7 @@ var runCmd = &cobra.Command{
 	Short: "Start t0rch_go as an HTTP server",
 	Run: func(cmd *cobra.Command, args []string) {
 		r := gin.Default()
+		r.Use(cors.Default())
 
 		r.POST("/scan", scanHandler)
 		r.POST("/scan-test", scanTestHandler)
@@ -238,8 +240,7 @@ func scanHandler(c *gin.Context) {
 				fmt.Printf("%v - %v - %v\n", count.Load(), ip.String(), time.Since(s))
 
 				scannedIp := ScanApiRes{
-					1,
-					ip,
+					ip.String(),
 					summary.Info.Type,
 					worker,
 					elapsed,
@@ -258,9 +259,10 @@ func scanHandler(c *gin.Context) {
 			}(client, ip, models)
 		}
 	}
+	c.Header("content-type", "application/json")
+	c.Writer.WriteHeader(http.StatusOK)
 	go func(s chan ScanApiRes) {
 		for item := range s {
-			fmt.Println()
 			c.SSEvent("ip-summary", item)
 		}
 		// c.Stream(func(w io.Writer) bool {
@@ -422,19 +424,18 @@ type ScanApiBody struct {
 }
 
 type ScanApiRes struct {
-	Id             int    `json:"id"`
-	Ip             net.IP `json:"ip"`
+	Ip             string `json:"ip"`
 	MinerType      string `json:"miner_type"`
-	Worker         string `json:"Worker"`
-	Uptime         int    `json:"Uptime"`
-	HashRate       int    `json:"HashRate"`
-	FanCount       int    `json:"FanCount"`
-	HbCount        int    `json:"HbCount"`
-	PowerType      string `json:"PowerType"`
-	Controller     string `json:"Controller"`
-	IsUnderhashing bool   `json:"IsUnderhashing"`
-	HashboardType  string `json:"HashboardType"`
-	PsuFailure     bool   `json:"PsuFailure"`
+	Worker         string `json:"worker"`
+	Uptime         int    `json:"uptime"`
+	HashRate       int    `json:"hashrate"`
+	FanCount       int    `json:"fan_count"`
+	HbCount        int    `json:"hb_count"`
+	PowerType      string `json:"power_type"`
+	Controller     string `json:"controller"`
+	IsUnderhashing bool   `json:"is_underhashing"`
+	HashboardType  string `json:"hashboard_type"`
+	PsuFailure     bool   `json:"psu_failure"`
 }
 
 type IpStats struct {
@@ -586,8 +587,8 @@ func scanTestHandler(c *gin.Context) {
 				defer count.Add(1)
 				s := time.Now()
 
-				_, err := client.Head(fmt.Sprintf("http://%s", ip))
-				// _, err := client.Head("https://example.com/")
+				// _, err := client.Head(fmt.Sprintf("http://%s", ip))
+				_, err := client.Head("https://example.com/")
 				// time.Sleep(time.Second * 3)
 				if err != nil {
 					log.Println(err)
@@ -595,8 +596,7 @@ func scanTestHandler(c *gin.Context) {
 				fmt.Printf("%v - %v - %v\n", count.Load(), ip.String(), time.Since(s))
 
 				scannedIp := ScanApiRes{
-					1,
-					ip,
+					ip.String(),
 					"",
 					"",
 					0,
@@ -614,12 +614,15 @@ func scanTestHandler(c *gin.Context) {
 			}(client, ip, models)
 		}
 	}
+	c.Header("content-type", "application/json")
+	c.Writer.WriteHeader(http.StatusOK)
 	go func(s chan ScanApiRes) {
 		for item := range s {
 			c.SSEvent("ip-summary", item)
 		}
 		// c.Stream(func(w io.Writer) bool {
 		// 	if msg, ok := <-s; ok {
+		// 		c.Writer.Flush()
 		// 		c.SSEvent("ip-summary", msg)
 		// 		return true
 		// 	}
