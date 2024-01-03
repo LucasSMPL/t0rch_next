@@ -223,6 +223,7 @@ func scanHandler(c *gin.Context) {
 				if p != "" {
 					psuFailure = true
 				}
+				// if Keyword is found but Hashrate = normal - ignore psuFailure.
 
 				powerRgx := regexp.MustCompile("power type version: (0x[0-9a-fA-F]+)")
 				searchRes := strings.Split(powerRgx.FindString(logs), " ")
@@ -488,18 +489,18 @@ type IpMinerConf struct {
 		User string `json:"user"`
 		Pass string `json:"pass"`
 	} `json:"pools"`
-	ApiListen        bool   `json:"api-listen"`
-	ApiNetwork       bool   `json:"api-network"`
-	ApiGroups        string `json:"api-groups"`
-	ApiAllow         string `json:"api-allow"`
-	BitmainFanCtrl   bool   `json:"bitmain-fan-ctrl"`
-	BitmainFanPwm    string `json:"bitmain-fan-pwm"`
-	BitmainUseVil    bool   `json:"bitmain-use-vil"`
-	BitmainFreq      string `json:"bitmain-freq"`
-	BitmainVoltage   string `json:"bitmain-voltage"`
-	BitmainCcdelay   string `json:"bitmain-ccdelay"`
-	BitmainPwth      string `json:"bitmain-pwth"`
-	BitmainWorkMode  int    `json:"bitmain-work-mode"`
+	ApiListen      bool   `json:"api-listen"`
+	ApiNetwork     bool   `json:"api-network"`
+	ApiGroups      string `json:"api-groups"`
+	ApiAllow       string `json:"api-allow"`
+	BitmainFanCtrl bool   `json:"bitmain-fan-ctrl"`
+	BitmainFanPwm  string `json:"bitmain-fan-pwm"`
+	BitmainUseVil  bool   `json:"bitmain-use-vil"`
+	BitmainFreq    string `json:"bitmain-freq"`
+	BitmainVoltage string `json:"bitmain-voltage"`
+	BitmainCcdelay string `json:"bitmain-ccdelay"`
+	BitmainPwth    string `json:"bitmain-pwth"`
+	// BitmainWorkMode  int    `json:"bitmain-work-mode"`
 	BitmainFreqLevel string `json:"bitmain-freq-level"`
 }
 
