@@ -68,7 +68,7 @@ func scanHandler(c *gin.Context) {
 			// 	ExpectContinueTimeout: 1 * time.Second,
 			// },
 		},
-		// Timeout: time.Second * 10,
+		Timeout: time.Second * 15,
 	}
 
 	spClient, err := supabase.NewClient(
@@ -111,7 +111,7 @@ func scanHandler(c *gin.Context) {
 				defer wg.Done()
 				defer sem.Release(1)
 				defer count.Add(1)
-				s := time.Now()
+				// s := time.Now()
 
 				summaryCh := make(chan IpSummary, 1)
 				statsCh := make(chan IpStats, 1)
@@ -177,7 +177,7 @@ func scanHandler(c *gin.Context) {
 					}
 				}
 				if model == nil {
-					HandleError(fmt.Errorf("model not found: %v", summary.Info.Type))
+					HandleError(fmt.Errorf("%v model not found: %v", ip.String(), summary.Info.Type))
 					return
 				}
 				// fmt.Printf("Model: %v\n", *model)
@@ -219,13 +219,14 @@ func scanHandler(c *gin.Context) {
 				}
 
 				psuFailingKeywords := []string{"power voltage can not meet the target", "ERROR_POWER_LOST", "stop_mining: get power type version failed!"}
-				p := ContainsAny(logs, psuFailingKeywords)
-				if p != "" {
-					psuFailure = true
+				if isUnderhashing {
+					p := ContainsAny(logs, psuFailingKeywords)
+					if p != "" {
+						psuFailure = true
+					}
 				}
-				// if Keyword is found but Hashrate = normal - ignore psuFailure.
 
-				powerRgx := regexp.MustCompile("power type version: (0x[0-9a-fA-F]+)")
+				powerRgx := regexp.MustCompile("power type version: (0x0-9[a-fA-F]+)")
 				searchRes := strings.Split(powerRgx.FindString(logs), " ")
 				if len(searchRes) >= 4 {
 					powerType = searchRes[3]
@@ -238,7 +239,7 @@ func scanHandler(c *gin.Context) {
 				}
 
 				// fmt.Printf("%v - %v\n", powerType, hbModel)
-				fmt.Printf("%v - %v - %v\n", count.Load(), ip.String(), time.Since(s))
+				// fmt.Printf("%v - %v - %v\n", count.Load(), ip.String(), time.Since(s))
 
 				scannedIp := ScanApiRes{
 					ip.String(),
@@ -255,6 +256,7 @@ func scanHandler(c *gin.Context) {
 					psuFailure,
 				}
 				streamChan <- scannedIp
+				fmt.Printf("%v - %v - %v\n", count.Load(), ip.String(), scannedIp.FanCount)
 				// gCtx.SSEvent("ip-summary", scannedIp)
 				// fmt.Println(scannedIp)
 			}(client, ip, models)
@@ -282,7 +284,7 @@ func scanHandler(c *gin.Context) {
 }
 
 func HandleError(e error) {
-	log.Printf("Error: %v", e.Error())
+	// log.Printf("Error: %v", e.Error())
 }
 
 func ContainsAny(s string, substrings []string) string {
