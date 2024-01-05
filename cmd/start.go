@@ -67,7 +67,7 @@ func scanHandler(c *gin.Context) {
 			// 	ExpectContinueTimeout: 1 * time.Second,
 			// },
 		},
-		Timeout: time.Second * 15,
+		Timeout: time.Second * 10,
 	}
 
 	spClient, err := supabase.NewClient(
@@ -284,7 +284,7 @@ func scanHandler(c *gin.Context) {
 }
 
 func HandleError(e error) {
-	// log.Printf("Error: %v", e.Error())
+	log.Printf("Error: %v", e.Error())
 }
 
 func ContainsAny(s string, substrings []string) string {
