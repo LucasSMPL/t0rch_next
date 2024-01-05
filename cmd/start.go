@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"regexp"
@@ -33,6 +34,7 @@ var runCmd = &cobra.Command{
 		r.Use(cors.Default())
 
 		r.POST("/scan", scanHandler)
+		r.POST("/reboot", rebootHandler)
 		// r.POST("/scan-test", scanTestHandler)
 
 		r.Run(":7070")
@@ -524,123 +526,73 @@ type MinerModel struct {
 	} `json:"manufacturer"`
 }
 
-// func scanTestHandler(c *gin.Context) {
-// 	var ipRanges ScanApiBody
-// 	decoder := json.NewDecoder(c.Request.Body)
+type RebootApiBody struct {
+	IPs []string `json:"ips"`
+}
 
-// 	if err := decoder.Decode(&ipRanges); err != nil {
-// 		http.Error(c.Writer, err.Error(), http.StatusBadRequest)
-// 		c.Writer.WriteHeader(http.StatusBadRequest)
-// 		return
-// 	}
-// 	if len(ipRanges.Ranges) == 0 {
-// 		http.Error(c.Writer, "No Ranges Provided", http.StatusBadRequest)
-// 		c.Writer.WriteHeader(http.StatusBadRequest)
-// 		return
-// 	}
-// 	client := &http.Client{
-// 		Transport: &digest.Transport{
-// 			Username: "root",
-// 			Password: "root",
-// 			// Transport: &http.Transport{
-// 			// 	Dial: (&net.Dialer{
-// 			// 		Timeout:   30 * time.Second,
-// 			// 		KeepAlive: 30 * time.Second,
-// 			// 	}).Dial,
-// 			// 	TLSHandshakeTimeout:   3 * time.Second,
-// 			// 	ResponseHeaderTimeout: 3 * time.Second,
-// 			// 	ExpectContinueTimeout: 1 * time.Second,
-// 			// 	MaxIdleConns:          10,
-// 			// 	IdleConnTimeout:       time.Second * 3,
-// 			// },
-// 		},
-// 		// Timeout: time.Second * 3,
-// 	}
+func rebootHandler(c *gin.Context) {
+	var body RebootApiBody
+	decoder := json.NewDecoder(c.Request.Body)
 
-// 	spClient, err := supabase.NewClient(
-// 		"https://conqcdxbczhqszglmwyk.supabase.co",
-// 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvbnFjZHhiY3pocXN6Z2xtd3lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE2Nzk4NjM0NDQsImV4cCI6MTk5NTQzOTQ0NH0.LNi12BRKMOOmqW396mjgm_wgJp79U-Ie994EyLlfxnc",
-// 		nil,
-// 	)
-// 	if err != nil {
-// 		HandleError(err)
-// 	}
+	if err := decoder.Decode(&body); err != nil {
+		http.Error(c.Writer, err.Error(), http.StatusBadRequest)
+		c.Writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if len(body.IPs) == 0 {
+		http.Error(c.Writer, "No IPs Provided", http.StatusBadRequest)
+		c.Writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	client := &http.Client{
+		Transport: &digest.Transport{
+			Username: "root",
+			Password: "root",
+		},
+		Timeout: time.Second * 10,
+	}
 
-// 	data, _, err := spClient.From("miner_models").Select("*,manufacturer:manufacturers(*)", "", false).Execute()
-// 	if err != nil {
-// 		HandleError(err)
-// 	}
-// 	var models []MinerModel
-// 	err = json.Unmarshal(data, &models)
-// 	if err != nil {
-// 		HandleError(err)
-// 		return
-// 	}
+	wg := sync.WaitGroup{}
+	ctx := context.TODO()
+	count := atomic.Int32{}
+	sem := semaphore.NewWeighted(200)
+	// s := time.Now()
 
-// 	wg := sync.WaitGroup{}
-// 	ctx := context.TODO()
-// 	count := atomic.Int32{}
-// 	sem := semaphore.NewWeighted(200)
+	for i := 0; i < len(body.IPs); i++ {
+		ip := net.ParseIP(body.IPs[i])
+		if ip == nil {
+			http.Error(c.Writer, "One or More Invalid IPs Provided", http.StatusBadRequest)
+			c.Writer.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		wg.Add(1)
 
-// 	streamChan := make(chan ScanApiRes)
+		go func(client *http.Client, ip net.IP) {
+			sem.Acquire(ctx, 1)
+			defer wg.Done()
+			defer sem.Release(1)
+			defer count.Add(1)
 
-// 	for ri := 0; ri < len(ipRanges.Ranges); ri++ {
-// 		ipRange := ipRanges.Ranges[ri]
-// 		for ip := ipRange.Start; !ip.Equal(ipRange.End); ip = incrementIP(ip) {
-// 			wg.Add(1)
+			apiEndpoint := "/cgi-bin/reboot"
+			fullURL := fmt.Sprintf("http://%s%s", ip, apiEndpoint)
 
-// 			go func(client *http.Client, ip net.IP, models []MinerModel) {
-// 				sem.Acquire(ctx, 1)
-// 				defer wg.Done()
-// 				defer sem.Release(1)
-// 				defer count.Add(1)
-// 				s := time.Now()
+			res, err := client.Get(fullURL)
+			if err != nil {
+				HandleError(err)
+				return
+			}
+			defer res.Body.Close()
 
-// 				// _, err := client.Head(fmt.Sprintf("http://%s", ip))
-// 				_, err := client.Head("https://example.com/")
-// 				// time.Sleep(time.Second * 3)
-// 				if err != nil {
-// 					log.Println(err)
-// 				}
-// 				fmt.Printf("%v - %v - %v\n", count.Load(), ip.String(), time.Since(s))
+			if res.StatusCode >= 300 {
+				HandleError(fmt.Errorf("status: %d", res.StatusCode))
+				return
+			}
 
-// 				scannedIp := ScanApiRes{
-// 					ip.String(),
-// 					"",
-// 					"",
-// 					0,
-// 					0,
-// 					0,
-// 					0,
-// 					"",
-// 					"",
-// 					true,
-// 					"",
-// 					true,
-// 				}
-// 				streamChan <- scannedIp
+		}(client, ip)
+	}
 
-// 			}(client, ip, models)
-// 		}
-// 	}
-// 	c.Header("content-type", "application/json")
-// 	c.Writer.WriteHeader(http.StatusOK)
-// 	go func(s chan ScanApiRes) {
-// 		for item := range s {
-// 			c.SSEvent("ip-summary", item)
-// 		}
-// 		// c.Stream(func(w io.Writer) bool {
-// 		// 	if msg, ok := <-s; ok {
-// 		// 		c.Writer.Flush()
-// 		// 		c.SSEvent("ip-summary", msg)
-// 		// 		return true
-// 		// 	}
-// 		// 	return false
-// 		// })
+	c.Header("content-type", "application/json")
+	c.Writer.WriteHeader(http.StatusOK)
+	wg.Wait()
 
-// 	}(streamChan)
-
-// 	wg.Wait()
-// 	close(streamChan)
-
-// }
+}
