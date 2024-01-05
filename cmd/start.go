@@ -35,6 +35,7 @@ var runCmd = &cobra.Command{
 
 		r.POST("/scan", scanHandler)
 		r.POST("/reboot", rebootHandler)
+		r.POST("/blink", blinkHandler)
 		// r.POST("/scan-test", scanTestHandler)
 
 		r.Run(":7070")
@@ -573,7 +574,78 @@ func rebootHandler(c *gin.Context) {
 			defer sem.Release(1)
 			defer count.Add(1)
 
-			apiEndpoint := "/cgi-bin/reboot"
+			apiEndpoint := "/cgi-bin/reboot.cgi"
+			fullURL := fmt.Sprintf("http://%s%s", ip, apiEndpoint)
+
+			res, err := client.Get(fullURL)
+			if err != nil {
+				HandleError(err)
+				return
+			}
+			defer res.Body.Close()
+
+			if res.StatusCode >= 300 {
+				HandleError(fmt.Errorf("status: %d", res.StatusCode))
+				return
+			}
+
+		}(client, ip)
+	}
+
+	c.Header("content-type", "application/json")
+	c.Writer.WriteHeader(http.StatusOK)
+	wg.Wait()
+
+}
+
+type BlinkApiBody struct {
+	IPs []string `json:"ips"`
+}
+
+func blinkHandler(c *gin.Context) {
+	var body BlinkApiBody
+	decoder := json.NewDecoder(c.Request.Body)
+
+	if err := decoder.Decode(&body); err != nil {
+		http.Error(c.Writer, err.Error(), http.StatusBadRequest)
+		c.Writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if len(body.IPs) == 0 {
+		http.Error(c.Writer, "No IPs Provided", http.StatusBadRequest)
+		c.Writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	client := &http.Client{
+		Transport: &digest.Transport{
+			Username: "root",
+			Password: "root",
+		},
+		Timeout: time.Second * 10,
+	}
+
+	wg := sync.WaitGroup{}
+	ctx := context.TODO()
+	count := atomic.Int32{}
+	sem := semaphore.NewWeighted(200)
+	// s := time.Now()
+
+	for i := 0; i < len(body.IPs); i++ {
+		ip := net.ParseIP(body.IPs[i])
+		if ip == nil {
+			http.Error(c.Writer, "One or More Invalid IPs Provided", http.StatusBadRequest)
+			c.Writer.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		wg.Add(1)
+
+		go func(client *http.Client, ip net.IP) {
+			sem.Acquire(ctx, 1)
+			defer wg.Done()
+			defer sem.Release(1)
+			defer count.Add(1)
+
+			apiEndpoint := "/cgi-bin/blink.cgi"
 			fullURL := fmt.Sprintf("http://%s%s", ip, apiEndpoint)
 
 			res, err := client.Get(fullURL)
