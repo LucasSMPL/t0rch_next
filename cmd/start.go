@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -648,7 +649,18 @@ func blinkHandler(c *gin.Context) {
 			apiEndpoint := "/cgi-bin/blink.cgi"
 			fullURL := fmt.Sprintf("http://%s%s", ip, apiEndpoint)
 
-			res, err := client.Get(fullURL)
+			type BlinkApiBody = struct {
+				Blink bool `json:"blink"`
+			}
+
+			blink := BlinkApiBody{
+				Blink: true,
+			}
+			marshalled, err := json.Marshal(blink)
+			if err != nil {
+				log.Fatalf("impossible to marshall blink: %s", err)
+			}
+			res, err := client.Post(fullURL, "application/json", bytes.NewReader(marshalled))
 			if err != nil {
 				HandleError(err)
 				return
@@ -659,6 +671,27 @@ func blinkHandler(c *gin.Context) {
 				HandleError(fmt.Errorf("status: %d", res.StatusCode))
 				return
 			}
+
+			// time.Sleep(time.Second * 5)
+
+			// blink = BlinkApiBody{
+			// 	Blink: false,
+			// }
+			// marshalled, err = json.Marshal(blink)
+			// if err != nil {
+			// 	log.Fatalf("impossible to marshall blink: %s", err)
+			// }
+			// res, err = client.Post(fullURL, "application/json", bytes.NewReader(marshalled))
+			// if err != nil {
+			// 	HandleError(err)
+			// 	return
+			// }
+			// defer res.Body.Close()
+
+			// if res.StatusCode >= 300 {
+			// 	HandleError(fmt.Errorf("status: %d", res.StatusCode))
+			// 	return
+			// }
 
 		}(client, ip)
 	}
