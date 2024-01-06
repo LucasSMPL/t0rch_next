@@ -1,14 +1,14 @@
 package cmd
 
 import (
+	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"os"
-	"sync"
-	"sync/atomic"
 	"time"
 
+	"github.com/icholy/digest"
 	"github.com/spf13/cobra"
 )
 
@@ -20,41 +20,49 @@ var testCmd = &cobra.Command{
 	Use:   "test",
 	Short: "Test Anything in this command",
 	Run: func(cmd *cobra.Command, args []string) {
-		logFile, err := os.OpenFile("log.txt", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
+		client := &http.Client{
+			Transport: &digest.Transport{
+				Username: "root",
+				Password: "root",
+				// Transport: &http.Transport{
+				// 	Dial: (&net.Dialer{
+				// 		Timeout:   30 * time.Second,
+				// 		KeepAlive: 30 * time.Second,
+				// 	}).Dial,
+				// 	TLSHandshakeTimeout:   10 * time.Second,
+				// 	ResponseHeaderTimeout: 10 * time.Second,
+				// 	ExpectContinueTimeout: 1 * time.Second,
+				// },
+			},
+			Timeout: time.Second * 10,
+		}
+
+		apiEndpoint := "/cgi-bin/summary.cgi"
+		fullURL := fmt.Sprintf("http://10.0.108.11%s", apiEndpoint)
+
+		res, err := client.Get(fullURL)
 		if err != nil {
-			panic(err)
+			HandleError(err)
+			return
 		}
-		defer logFile.Close()
-		mw := io.MultiWriter(os.Stdout, logFile)
-		log.SetOutput(mw)
-		cases := []int{1, 10, 100, 1000, 10000}
-		for _, c := range cases {
-			makeRequest(c)
+		defer res.Body.Close()
+
+		if res.StatusCode >= 300 {
+			HandleError(fmt.Errorf("status: %d", res.StatusCode))
+			return
 		}
+
+		resBytes, _ := io.ReadAll(res.Body)
+		log.Println(string(resBytes))
+
+		var ipSummary IpSummary
+		err = json.Unmarshal(resBytes, &ipSummary)
+		// err = json.NewDecoder(res.Body).Decode(&ipSummary)
+		if err != nil {
+			HandleError(err)
+			return
+		}
+		log.Println(ipSummary)
+
 	},
-}
-
-func makeRequest(n int) {
-	wg := sync.WaitGroup{}
-	count := atomic.Int32{}
-	wg.Add(n)
-	s := time.Now()
-	for j := 0; j < n; j++ {
-		go myGoRoutine(&wg, &count)
-	}
-	wg.Wait()
-	log.Printf("Time Elapsed: %v for %d iterations", time.Since(s), n)
-}
-
-func myGoRoutine(wg *sync.WaitGroup, count *atomic.Int32) {
-	defer wg.Done()
-	s := time.Now()
-	defer func() {
-		log.Printf("Time Elapsed: %v", time.Since(s))
-	}()
-	_, err := http.Get("https://dummy.restapiexample.com/api/v1/employee/1")
-	if err != nil {
-		log.Printf("Error: %v", err.Error())
-	}
-	count.Add(1)
 }

@@ -320,10 +320,14 @@ func getMinerSummary(
 		return
 	}
 
-	// resBytes, _ := io.ReadAll(res.Body)
+	resBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		HandleError(err)
+		return
+	}
 
 	var ipSummary IpSummary
-	json.NewDecoder(res.Body).Decode(&ipSummary)
+	err = json.Unmarshal(resBytes, &ipSummary)
 	if err != nil {
 		HandleError(err)
 		return
@@ -353,10 +357,14 @@ func getMinerConf(
 		return
 	}
 
-	// resBytes, _ := io.ReadAll(res.Body)
+	resBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		HandleError(err)
+		return
+	}
 
 	var ipMinerConf IpMinerConf
-	json.NewDecoder(res.Body).Decode(&ipMinerConf)
+	err = json.Unmarshal(resBytes, &ipMinerConf)
 	if err != nil {
 		HandleError(err)
 		return
@@ -414,13 +422,16 @@ func getMinerStats(
 		return
 	}
 
-	// resBytes, _ := io.ReadAll(res.Body)
-
-	var ipStats IpStats
-	json.NewDecoder(res.Body).Decode(&ipStats)
+	resBytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		HandleError(err)
-		fmt.Println(err.Error())
+		return
+	}
+
+	var ipStats IpStats
+	err = json.Unmarshal(resBytes, &ipStats)
+	if err != nil {
+		HandleError(err)
 		return
 	}
 
@@ -501,18 +512,18 @@ type IpMinerConf struct {
 		User string `json:"user"`
 		Pass string `json:"pass"`
 	} `json:"pools"`
-	ApiListen      bool   `json:"api-listen"`
-	ApiNetwork     bool   `json:"api-network"`
-	ApiGroups      string `json:"api-groups"`
-	ApiAllow       string `json:"api-allow"`
-	BitmainFanCtrl bool   `json:"bitmain-fan-ctrl"`
-	BitmainFanPwm  string `json:"bitmain-fan-pwm"`
-	BitmainUseVil  bool   `json:"bitmain-use-vil"`
-	BitmainFreq    string `json:"bitmain-freq"`
-	BitmainVoltage string `json:"bitmain-voltage"`
-	BitmainCcdelay string `json:"bitmain-ccdelay"`
-	BitmainPwth    string `json:"bitmain-pwth"`
-	// BitmainWorkMode  int    `json:"bitmain-work-mode"`
+	ApiListen        bool   `json:"api-listen"`
+	ApiNetwork       bool   `json:"api-network"`
+	ApiGroups        string `json:"api-groups"`
+	ApiAllow         string `json:"api-allow"`
+	BitmainFanCtrl   bool   `json:"bitmain-fan-ctrl"`
+	BitmainFanPwm    string `json:"bitmain-fan-pwm"`
+	BitmainUseVil    bool   `json:"bitmain-use-vil"`
+	BitmainFreq      string `json:"bitmain-freq"`
+	BitmainVoltage   string `json:"bitmain-voltage"`
+	BitmainCcdelay   string `json:"bitmain-ccdelay"`
+	BitmainPwth      string `json:"bitmain-pwth"`
+	BitmainWorkMode  string `json:"bitmain-work-mode"`
 	BitmainFreqLevel string `json:"bitmain-freq-level"`
 }
 
@@ -526,6 +537,67 @@ type MinerModel struct {
 		Id   int    `json:"id"`
 		Name string `json:"name"`
 	} `json:"manufacturer"`
+}
+
+func incrementIP(ip net.IP) net.IP {
+	nextIP := make(net.IP, len(ip))
+	copy(nextIP, ip)
+
+	for i := len(nextIP) - 1; i >= 0; i-- {
+		nextIP[i]++
+		if nextIP[i] > 0 {
+			break
+		}
+	}
+
+	return nextIP
+}
+
+type IpSummary struct {
+	Status struct {
+		Status     string `json:"STATUS"`
+		When       int    `json:"when"`
+		Msg        string `json:"Msg"`
+		ApiVersion string `json:"api_version"`
+	} `json:"STATUS"`
+	Info struct {
+		MinerVersion string `json:"miner_version"`
+		CompileTime  string `json:"CompileTime"`
+		Type         string `json:"type"`
+	} `json:"INFO"`
+	Summary []struct {
+		Elapsed   int     `json:"elapsed"`
+		Rate_5s   float64 `json:"rate_5s"`
+		Rate_30m  float64 `json:"rate_30m"`
+		RateAvg   float64 `json:"rate_avg"`
+		RateIdeal float64 `json:"rate_ideal"`
+		RateUnit  string  `json:"rate_unit"`
+		HwAll     int     `json:"hw_all"`
+		BestShare int     `json:"bestshare"`
+		Status    []struct {
+			Type   string `json:"type"`
+			Status string `json:"status"`
+			Code   int    `json:"code"`
+			Msg    string `json:"msg"`
+		} `json:"status"`
+	} `json:"SUMMARY"`
+}
+
+type ScannedIp struct {
+	// Id             int
+	Ip             string
+	MinerType      string
+	Worker         string
+	Uptime         int
+	Hashrate       int
+	FanCount       int
+	HbCount        int
+	PowerType      string
+	Controller     string
+	IsUnderhashing bool
+	IsFound        bool
+	HashboardType  string
+	PsuFailure     bool
 }
 
 type RebootApiBody struct {
