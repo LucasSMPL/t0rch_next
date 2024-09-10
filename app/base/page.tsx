@@ -9,202 +9,190 @@ import { Radar, Check, Bitcoin, Receipt, BarChart4, Castle, Building2, GrapeIcon
 // Inventory = 25701
 // Shelby = 26627
 // PrarieRose = 27213
-
 // e94d1b
 //ff7f0f
 
+function getWindBlowingDirection(windFrom: number): number {
+  return windFrom < 180 ? windFrom + 180 : windFrom - 180;
+}
+
 export default async function () {
-    const svgUrl = '/t0xSM.svg';
+  const svgUrl = '/t0xSM.svg';
 
-    const cfu = await axios.get(
-      "https://api.foreman.mn/api/v2/clients/8180",
-      {
-        headers: {
-          accept: "application/json",
-          Authorization: "Token 5827e98b613a4844a0255904a805e6f86dc3775f",
-        },
-      }
-    );
-    const cfuOnline = cfu.data[0]?.miners?.online;
-    const cfuOffline = cfu.data[0]?.miners?.offline;
-    const cfuTotal = cfu.data[0]?.miners?.total;
-    const cfuOfflinePercentage = ((cfuOffline / cfuTotal) * 100).toFixed(2);
-    const cfuHashRateInHashes = cfu.data[0]?.hashRate;
-    const cfuHashRateInPH = cfuHashRateInHashes / 1e15;
-    // const cfuRoundedHashRateInPH = Math.round(cfuHashRateInPH * 100) / 100;
-    const cfuPowerDraw = cfu.data[0]?.powerDraw / 1_000_000;
-      const cfuWeather = await axios.get(
-        "https://api.open-meteo.com/v1/forecast?latitude=42.5278&longitude=-92.4455&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,pressure_msl,surface_pressure,wind_speed_10m,wind_direction_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&forecast_days=1",
-      );
-      const cfuApparentTemperature = cfuWeather.data.current.temperature_2m;
+  // CFU Data
+  const cfu = await axios.get("https://api.foreman.mn/api/v2/clients/8180", {
+    headers: {
+      accept: "application/json",
+      Authorization: "Token 5827e98b613a4844a0255904a805e6f86dc3775f",
+    },
+  });
+  const cfuOnline = cfu.data[0]?.miners?.online;
+  const cfuOffline = cfu.data[0]?.miners?.offline;
+  const cfuTotal = cfu.data[0]?.miners?.total;
+  const cfuOfflinePercentage = ((cfuOffline / cfuTotal) * 100).toFixed(2);
+  const cfuHashRateInHashes = cfu.data[0]?.hashRate;
+  const cfuHashRateInPH = cfuHashRateInHashes / 1e15;
+  const cfuPowerDraw = cfu.data[0]?.powerDraw / 1_000_000;
 
-      const getWindBlowingDirection = (cfuWindFrom: number): number => {
-        return (cfuWindFrom < 180) ? cfuWindFrom + 180 : cfuWindFrom - 180;
-    };
+  const cfuWeather = await axios.get(
+    "https://api.open-meteo.com/v1/forecast?latitude=42.5278&longitude=-92.4455&current=temperature_2m,wind_speed_10m,wind_direction_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&forecast_days=1"
+  );
+  const cfuApparentTemperature = cfuWeather.data.current.temperature_2m;
+  const cfuWindSpeed = cfuWeather.data.current.wind_speed_10m;
+  const cfuWindFrom = cfuWeather.data.current.wind_direction_10m;
+  const cfuWindTowards = getWindBlowingDirection(cfuWindFrom);
 
-    const cfuWindSpeed = cfuWeather.data.current.wind_speed_10m;
-    const cfuWindFrom = cfuWeather.data.current.wind_direction_10m;
-    const cfuWindTowards = getWindBlowingDirection(cfuWindFrom);
+  // LM Data
+  const lm = await axios.get("https://api.foreman.mn/api/v2/clients/8179", {
+    headers: {
+      accept: "application/json",
+      Authorization: "Token 5827e98b613a4844a0255904a805e6f86dc3775f",
+    },
+  });
+  const lmOnline = lm.data[0]?.miners?.online;
+  const lmOffline = lm.data[0]?.miners?.offline;
+  const lmTotal = lm.data[0]?.miners?.total;
+  const lmOfflinePercentage = ((lmOffline / lmTotal) * 100).toFixed(2);
+  const lmHashrateInHashes = lm.data[0]?.hashRate;
+  const lmHashrateInPH = lmHashrateInHashes / 1e15;
+  const lmPowerDraw = lm.data[0]?.powerDraw / 1_000_000;
 
-    const cfuWindSpeedBlue = (cfuWindSpeed: number) => {
-      return cfuWindSpeed ? "text-[#006eff]" : "text-[#006eff]"; 
-  };
+  const lmWeather = await axios.get(
+    "https://api.open-meteo.com/v1/forecast?latitude=43.4194&longitude=-93.5333&current=temperature_2m,wind_speed_10m,wind_direction_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch"
+  );
+  const lmApparentTemperature = lmWeather.data.current.temperature_2m;
+  const lmWindSpeed = lmWeather.data.current.wind_speed_10m;
+  const lmWindFrom = lmWeather.data.current.wind_direction_10m;
+  const lmWindTowards = getWindBlowingDirection(lmWindFrom);
 
+  // S3 Data
+  const s3 = await axios.get("https://api.foreman.mn/api/v2/clients/25955", {
+    headers: {
+      accept: "application/json",
+      Authorization: "Token 5827e98b613a4844a0255904a805e6f86dc3775f",
+    },
+  });
+  const s3Online = s3.data[0]?.miners?.online;
+  const s3Offline = s3.data[0]?.miners?.offline;
+  const s3Total = s3.data[0]?.miners?.total;
+  const s3OfflinePercentage = ((s3Offline / s3Total) * 100).toFixed(2);
+  const s3HashrateInHashes = s3.data[0]?.hashRate;
+  const s3HashrateInPH = s3HashrateInHashes / 1e15;
+  const s3PowerDraw = s3.data[0]?.powerDraw / 1_000_000;
 
+  const s3Weather = await axios.get(
+    "https://api.open-meteo.com/v1/forecast?latitude=42.5278&longitude=-92.4455&current=temperature_2m,wind_speed_10m,wind_direction_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch"
+  );
+  const s3ApparentTemperature = s3Weather.data.current.temperature_2m;
+  const s3WindSpeed = s3Weather.data.current.wind_speed_10m;
+  const s3WindFrom = s3Weather.data.current.wind_direction_10m;
+  const s3WindTowards = getWindBlowingDirection(s3WindFrom);
 
+  // Shelby Data
+  const shelby = await axios.get("https://api.foreman.mn/api/v2/clients/26627", {
+    headers: {
+      accept: "application/json",
+      Authorization: "Token 5827e98b613a4844a0255904a805e6f86dc3775f",
+    },
+  });
+  const shelbyOnline = shelby.data[0]?.miners?.online;
+  const shelbyOffline = shelby.data[0]?.miners?.offline;
+  const shelbyTotal = shelby.data[0]?.miners?.total;
+  const shelbyOfflinePercentage = ((shelbyOffline / shelbyTotal) * 100).toFixed(2);
+  const shelbyHashrateInHashes = shelby.data[0]?.hashRate;
+  const shelbyHashrateInPH = shelbyHashrateInHashes / 1e15;
+  const shelbyPowerDraw = shelby.data[0]?.powerDraw / 1_000_000;
 
+  const shelbyWeather = await axios.get(
+    "https://api.open-meteo.com/v1/forecast?latitude=41.4767&longitude=-95.338&current=temperature_2m,wind_speed_10m,wind_direction_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch"
+  );
+  const shelbyApparentTemperature = shelbyWeather.data.current.temperature_2m;
+  const shelbyWindSpeed = shelbyWeather.data.current.wind_speed_10m;
+  const shelbyWindFrom = shelbyWeather.data.current.wind_direction_10m;
+  const shelbyWindTowards = getWindBlowingDirection(shelbyWindFrom);
 
-          const lm = await axios.get(
-            "https://api.foreman.mn/api/v2/clients/8179",
-            {
-              headers: {
-                accept: "application/json",
-                Authorization: "Token 5827e98b613a4844a0255904a805e6f86dc3775f",
-              },
-            }
-          );
+  // Rose Data
+  const rose = await axios.get("https://api.foreman.mn/api/v2/clients/27213", {
+    headers: {
+      accept: "application/json",
+      Authorization: "Token 5827e98b613a4844a0255904a805e6f86dc3775f",
+    },
+  });
+  const roseOnline = rose.data[0]?.miners?.online;
+  const roseOffline = rose.data[0]?.miners?.offline;
+  const roseTotal = rose.data[0]?.miners?.total;
+  const roseOfflinePercentage = ((roseOffline / roseTotal) * 100).toFixed(2);
+  const roseHashrateInHashes = rose.data[0]?.hashRate;
+  const roseHashrateInPH = roseHashrateInHashes / 1e15;
+  const rosePowerDraw = rose.data[0]?.powerDraw / 1_000_000;
 
-          const lmOnline = lm.data[0]?.miners?.online;
-          const lmOffline = lm.data[0]?.miners?.offline;
-          const lmTotal = lm.data[0]?.miners?.total;
-          const lmOfflinePercentage = ((lmOffline / lmTotal) * 100).toFixed(2);
-          const lmHashrateInHashes = lm.data[0]?.hashRate;
-          const lmHashrateInPH = lmHashrateInHashes / 1e15;
-          const lmPowerDraw = lm.data[0]?.powerDraw / 1_000_000;
-          
-          const lmWeather = await axios.get(
-            "https://api.open-meteo.com/v1/forecast?latitude=43.4194&longitude=-93.5333&current=temperature_2m&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch",
-          );
-          const lmApparentTemperature = lmWeather.data.current.temperature_2m;
+  const roseWeather = await axios.get(
+    "https://api.open-meteo.com/v1/forecast?latitude=41.653&longitude=-95.3256&current=temperature_2m,wind_speed_10m,wind_direction_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch"
+  );
+  const roseApparentTemperature = roseWeather.data.current.temperature_2m;
+  const roseWindSpeed = roseWeather.data.current.wind_speed_10m;
+  const roseWindFrom = roseWeather.data.current.wind_direction_10m;
+  const roseWindTowards = getWindBlowingDirection(roseWindFrom);
 
-                const s3 = await axios.get(
-                  "https://api.foreman.mn/api/v2/clients/25955",
-                  {
-                    headers: {
-                      accept: "application/json",
-                      Authorization: "Token 5827e98b613a4844a0255904a805e6f86dc3775f",
-                    },
-                  }
-                );
+  // Bitcoin and Hashrate Data (unchanged)
+  const bitcoin = await axios.get(
+    "https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD"
+  );
+  const rawPrice = bitcoin.data.USD;
+  const bitcoinPrice = rawPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 
-                const s3Online = s3.data[0]?.miners?.online;
-                const s3Offline = s3.data[0]?.miners?.offline;
-                const s3Total = s3.data[0]?.miners?.total;
-                const s3OfflinePercentage = ((s3Offline / s3Total) * 100).toFixed(2);
-                const s3HashrateInHashes = s3.data[0]?.hashRate;
-                const s3HashrateInPH = s3HashrateInHashes / 1e15;
-                const s3PowerDraw = s3.data[0]?.powerDraw / 1_000_000;
-                
-                const s3Weather = await axios.get(
-                  "https://api.open-meteo.com/v1/forecast?latitude=42.5278&longitude=-92.4455&current=temperature_2m&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch",
-                );
-                const s3ApparentTemperature = s3Weather.data.current.temperature_2m;
-                
-                      const shelby = await axios.get(
-                        "https://api.foreman.mn/api/v2/clients/26627",
-                        {
-                          headers: {
-                            accept: "application/json",
-                            Authorization: "Token 5827e98b613a4844a0255904a805e6f86dc3775f",
-                          },
-                        }
-                      );
+  const hashRateResponse = await axios.post(
+    "https://api.hashrateindex.com/graphql",
+    {
+      query: `
+                query MyQuery {
+                bitcoinOverviews(last: 1) {
+                    nodes {
+                    networkHashrate7D
+                    }
+                }
+                }
+            `,
+    },
+    {
+      headers: {
+        "content-type": "application/json",
+        "x-hi-api-key": "hi.fa4e468a9b71db921e86fb9c0dc5f938",
+      },
+    }
+  );
+  
+  const nhRate7d =
+    (
+      hashRateResponse.data.data.bitcoinOverviews.nodes[0].networkHashrate7D /
+      1000000
+    ).toFixed(3) + " EH/s";
 
-                      const shelbyOnline = shelby.data[0]?.miners?.online;
-                      const shelbyOffline = shelby.data[0]?.miners?.offline;
-                      const shelbyTotal = shelby.data[0]?.miners?.total;
-                      const shelbyOfflinePercentage = ((shelbyOffline / shelbyTotal) * 100).toFixed(2);
-                      const shelbyHashrateInHashes = shelby.data[0]?.hashRate;
-                      const shelbyHashrateInPH = shelbyHashrateInHashes / 1e15;
-                      const shelbyPowerDraw = shelby.data[0]?.powerDraw / 1_000_000;
-                      
-                      const shelbyWeather = await axios.get(
-                        "https://api.open-meteo.com/v1/forecast?latitude=41.4767&longitude=-95.338&current=temperature_2m&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch",
-                      );
-                      const shelbyApparentTemperature = shelbyWeather.data.current.temperature_2m;
+  const hashPriceResponse = await axios.post(
+    "https://api.hashrateindex.com/graphql",
+    {
+      query: `
+                query MyQuery {
+                bitcoinOverviews(last: 1) {
+                    nodes {
+                    hashpriceUsd
+                    }
+                }
+                }
+            `,
+    },
+    {
+      headers: {
+        "content-type": "application/json",
+        "x-hi-api-key": "hi.fa4e468a9b71db921e86fb9c0dc5f938",
+      },
+    }
+  );
 
-                            const rose = await axios.get(
-                              "https://api.foreman.mn/api/v2/clients/27213",
-                              {
-                                headers: {
-                                  accept: "application/json",
-                                  Authorization: "Token 5827e98b613a4844a0255904a805e6f86dc3775f",
-                                },
-                              }
-                            );
+  const hashPriceUsd = (hashPriceResponse.data.data.bitcoinOverviews.nodes[0].hashpriceUsd) * 1000;
+  console.log(hashPriceUsd);
 
-                            const roseOnline = rose.data[0]?.miners?.online;
-                            const roseOffline = rose.data[0]?.miners?.offline;
-                            const roseTotal = rose.data[0]?.miners?.total;
-                            const roseOfflinePercentage = ((roseOffline / roseTotal) * 100).toFixed(2);
-                            const roseHashrateInHashes = rose.data[0]?.hashRate;
-                            const roseHashrateInPH = roseHashrateInHashes / 1e15;
-                            const rosePowerDraw = rose.data[0]?.powerDraw / 1_000_000;
-                            
-                            const roseWeather = await axios.get(
-                              "https://api.open-meteo.com/v1/forecast?latitude=41.653&longitude=-95.3256&current=temperature_2m&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch",
-                            );
-                            const roseApparentTemperature = shelbyWeather.data.current.temperature_2m;
-
-                                  const bitcoin = await axios.get(
-                                    "https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD",
-                                  );
-                                  const rawPrice = bitcoin.data.USD;
-                                  const bitcoinPrice = rawPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-
-                                        const hashRateResponse = await axios.post(
-                                          "https://api.hashrateindex.com/graphql",
-                                          {
-                                            query: `
-                                                        query MyQuery {
-                                                        bitcoinOverviews(last: 1) {
-                                                            nodes {
-                                                            networkHashrate7D
-                                                            }
-                                                        }
-                                                        }
-                                                    `,
-                                          },
-                                          {
-                                            headers: {
-                                              "content-type": "application/json",
-                                              "x-hi-api-key": "hi.fa4e468a9b71db921e86fb9c0dc5f938",
-                                            },
-                                          },
-                                        );
-                                    
-                                        const nhRate7d =
-                                          (
-                                            hashRateResponse.data.data.bitcoinOverviews.nodes[0].networkHashrate7D /
-                                            1000000
-                                          ).toFixed(3) + " EH/s";
-
-                                                const hashPriceResponse = await axios.post(
-                                                  "https://api.hashrateindex.com/graphql",
-                                                  {
-                                                    query: `
-                                                                query MyQuery {
-                                                                bitcoinOverviews(last: 1) {
-                                                                    nodes {
-                                                                    hashpriceUsd
-                                                                    }
-                                                                }
-                                                                }
-                                                            `,
-                                                  },
-                                                  {
-                                                    headers: {
-                                                      "content-type": "application/json",
-                                                      "x-hi-api-key": "hi.fa4e468a9b71db921e86fb9c0dc5f938",
-                                                    },
-                                                  },
-                                                );
-
-                                                const hashPriceUsd = (hashPriceResponse.data.data.bitcoinOverviews.nodes[0].hashpriceUsd) * 1000
-                                                console.log(hashPriceUsd)
-
-                                          
-                                                const smplHash = (cfuHashRateInPH) + (lmHashrateInPH) + (s3HashrateInPH) + (shelbyHashrateInPH) + (roseHashrateInPH)
+  const smplHash = (cfuHashRateInPH) + (lmHashrateInPH) + (s3HashrateInPH) + (shelbyHashrateInPH) + (roseHashrateInPH);
 
 
       return (
@@ -282,16 +270,16 @@ export default async function () {
           Temperature: <span className="text-[#006eff]">{cfuApparentTemperature}</span> °F
           </CardContent>
           <CardContent className="text-xl flex items-center">
-          Wind Data: <span className="text-[#006eff]">  {cfuWindSpeed} MPH</span>  <span className="ml-2" style={{ transform: `rotate(${cfuWindTowards}deg)`, display: 'inline-flex', alignItems: 'center'}}><ArrowUp style={{ color: "#006eff"}}/></span>
-          </CardContent>
+            Wind Data:&nbsp;<span className="text-[#006eff]">{cfuWindSpeed} MPH</span>  
+            <span className="ml-2" style={{ transform: `rotate(${cfuWindTowards}deg)`, display: 'inline-flex', alignItems: 'center'}}>
+                <ArrowUp style={{ color: "#006eff" }}/>
+            </span>
+        </CardContent>
           <CardContent className="text-xl">
           <div className="flex items-center">
             <span>ISP: 250 MB/s </span>
             <Check className="pl-2" style={{ color: "#4ade80" }} />
           </div>
-          </CardContent>
-          <CardContent className="text-xl">
-          Switches: <span className="text-[#006eff]"></span> #
           </CardContent>
         </Card>
           
@@ -320,9 +308,12 @@ export default async function () {
           <CardContent className="text-xl">
           Temperature: <span className="text-[#006eff]">{lmApparentTemperature}</span> °F
           </CardContent>
-          <CardContent className="text-xl">
-          Wind Data: <span className="text-[#006eff]"></span> °N
-          </CardContent>
+          <CardContent className="text-xl flex items-center">
+            Wind Data:&nbsp;<span className="text-[#006eff]">{lmWindSpeed} MPH</span>  
+            <span className="ml-2" style={{ transform: `rotate(${lmWindTowards}deg)`, display: 'inline-flex', alignItems: 'center'}}>
+                <ArrowUp style={{ color: "#006eff" }}/>
+            </span>
+        </CardContent>
           <CardContent className="text-xl">
           <div className="flex items-center">
             <span>ISP: 500 MB/s </span>
@@ -357,9 +348,12 @@ export default async function () {
           <CardContent className="text-xl">
           Temperature: <span className="text-[#006eff]">{s3ApparentTemperature}</span> °F
           </CardContent>
-          <CardContent className="text-xl">
-          Wind Data: <span className="text-[#006eff]"></span> °N
-          </CardContent>
+          <CardContent className="text-xl flex items-center">
+            Wind Data:&nbsp;<span className="text-[#006eff]">{cfuWindSpeed} MPH</span>  
+            <span className="ml-2" style={{ transform: `rotate(${cfuWindTowards}deg)`, display: 'inline-flex', alignItems: 'center'}}>
+                <ArrowUp style={{ color: "#006eff" }}/>
+            </span>
+        </CardContent>
           <CardContent className="text-xl">
           <div className="flex items-center">
             <span>ISP: 250 MB/s </span>
@@ -394,9 +388,12 @@ export default async function () {
           <CardContent className="text-xl">
           Temperature: <span className="text-[#006eff]">{shelbyApparentTemperature}</span> °F
           </CardContent>
-          <CardContent className="text-xl">
-          Wind Data: <span className="text-[#006eff]"></span> °N
-          </CardContent>
+          <CardContent className="text-xl flex items-center">
+            Wind Data:&nbsp;<span className="text-[#006eff]">{shelbyWindSpeed} MPH</span>  
+            <span className="ml-2" style={{ transform: `rotate(${shelbyWindTowards}deg)`, display: 'inline-flex', alignItems: 'center'}}>
+                <ArrowUp style={{ color: "#006eff" }}/>
+            </span>
+        </CardContent>
           <CardContent className="text-xl">
           <div className="flex items-center">
             <span>ISP: 100 MB/s </span>
@@ -431,9 +428,12 @@ export default async function () {
           <CardContent className="text-xl">
             Temperature: <span className="text-[#006eff]">{roseApparentTemperature}</span> °F
           </CardContent>
-          <CardContent className="text-xl">
-          Wind Data: <span className="text-[#006eff]"></span> °N
-          </CardContent>
+          <CardContent className="text-xl flex items-center">
+            Wind Data:&nbsp;<span className="text-[#006eff]">{roseWindSpeed} MPH</span>  
+            <span className="ml-2" style={{ transform: `rotate(${roseWindTowards}deg)`, display: 'inline-flex', alignItems: 'center'}}>
+                <ArrowUp style={{ color: "#006eff" }}/>
+            </span>
+        </CardContent>
           <CardContent className="text-xl">
           <div className="flex items-center">
             <span>ISP: 100 MB/s </span>
@@ -441,10 +441,8 @@ export default async function () {
           </div>
           </CardContent>
         </Card>
-
     </div>
         
         </>
       );
     };
-    
