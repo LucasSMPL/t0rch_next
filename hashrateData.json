@@ -1,0 +1,242 @@
+[
+  {
+    "timestamp": 1725980519760,
+    "totalHashrate": 909412598.5900034
+  },
+  {
+    "timestamp": 1725980609877,
+    "totalHashrate": 909391289.1399981
+  },
+  {
+    "timestamp": 1725980700071,
+    "totalHashrate": 908991662.1700014
+  },
+  {
+    "timestamp": 1725980791129,
+    "totalHashrate": 909297486.5000017
+  },
+  {
+    "timestamp": 1725980879759,
+    "totalHashrate": 908555615.6100008
+  },
+  {
+    "timestamp": 1725980969961,
+    "totalHashrate": 908346535.8999996
+  },
+  {
+    "timestamp": 1725981061319,
+    "totalHashrate": 908914204.2099984
+  },
+  {
+    "timestamp": 1725981149909,
+    "totalHashrate": 908910475.9900008
+  },
+  {
+    "timestamp": 1725981239894,
+    "totalHashrate": 908469225.4999987
+  },
+  {
+    "timestamp": 1725981329727,
+    "totalHashrate": 908232009.1399971
+  },
+  {
+    "timestamp": 1725981419899,
+    "totalHashrate": 908451129.169998
+  },
+  {
+    "timestamp": 1725981509845,
+    "totalHashrate": 908541932.1600016
+  },
+  {
+    "timestamp": 1725981599858,
+    "totalHashrate": 908103383.649999
+  },
+  {
+    "timestamp": 1725981690151,
+    "totalHashrate": 908303200.8100003
+  },
+  {
+    "timestamp": 1725981779788,
+    "totalHashrate": 907946069.5999973
+  },
+  {
+    "timestamp": 1725981869840,
+    "totalHashrate": 908454584.3699968
+  },
+  {
+    "timestamp": 1725981961183,
+    "totalHashrate": 907665682.899998
+  },
+  {
+    "timestamp": 1725982049939,
+    "totalHashrate": 907242376.1899996
+  },
+  {
+    "timestamp": 1725982139903,
+    "totalHashrate": 907196102.7700013
+  },
+  {
+    "timestamp": 1725982230906,
+    "totalHashrate": 907390159.4400005
+  },
+  {
+    "timestamp": 1725982321664,
+    "totalHashrate": 907279906.1499988
+  },
+  {
+    "timestamp": 1725982411702,
+    "totalHashrate": 907707059.7599994
+  },
+  {
+    "timestamp": 1725982503698,
+    "totalHashrate": 907704446.5699979
+  },
+  {
+    "timestamp": 1725982589866,
+    "totalHashrate": 908340121.4899982
+  },
+  {
+    "timestamp": 1725982679820,
+    "totalHashrate": 907622227.6300012
+  },
+  {
+    "timestamp": 1725982771531,
+    "totalHashrate": 907926301.8100013
+  },
+  {
+    "timestamp": 1725982870155,
+    "totalHashrate": 907241013.0999992
+  },
+  {
+    "timestamp": 1725982949977,
+    "totalHashrate": 906985454.569997
+  },
+  {
+    "timestamp": 1725983040041,
+    "totalHashrate": 906767070.2600001
+  },
+  {
+    "timestamp": 1725983131105,
+    "totalHashrate": 904427862.670002
+  },
+  {
+    "timestamp": 1725983220091,
+    "totalHashrate": 906623089.5199965
+  },
+  {
+    "timestamp": 1725983310068,
+    "totalHashrate": 906181260.2100009
+  },
+  {
+    "timestamp": 1725983401473,
+    "totalHashrate": 906206277.5399985
+  },
+  {
+    "timestamp": 1725983490060,
+    "totalHashrate": 906196474.7100005
+  },
+  {
+    "timestamp": 1725983579973,
+    "totalHashrate": 905860433.3199986
+  },
+  {
+    "timestamp": 1725983670151,
+    "totalHashrate": 905779300.2900017
+  },
+  {
+    "timestamp": 1725983759871,
+    "totalHashrate": 906536342.8999978
+  },
+  {
+    "timestamp": 1725983850266,
+    "totalHashrate": 906659137.9100007
+  },
+  {
+    "timestamp": 1725983940051,
+    "totalHashrate": 907014414.609999
+  },
+  {
+    "timestamp": 1725984032243,
+    "totalHashrate": 906658693.839999
+  },
+  {
+    "timestamp": 1725984120498,
+    "totalHashrate": 906803233.9799995
+  },
+  {
+    "timestamp": 1725984210921,
+    "totalHashrate": 906276618.9499993
+  },
+  {
+    "timestamp": 1725984302207,
+    "totalHashrate": 895336216.8499961
+  },
+  {
+    "timestamp": 1725984390491,
+    "totalHashrate": 905762113.1399977
+  },
+  {
+    "timestamp": 1725984490460,
+    "totalHashrate": 905347232.1799964
+  },
+  {
+    "timestamp": 1725984570839,
+    "totalHashrate": 905290624.7599996
+  },
+  {
+    "timestamp": 1725984662332,
+    "totalHashrate": 906519109.9799993
+  },
+  {
+    "timestamp": 1725984750418,
+    "totalHashrate": 905884284.7999983
+  },
+  {
+    "timestamp": 1725984840565,
+    "totalHashrate": 906019235.959999
+  },
+  {
+    "timestamp": 1725984931684,
+    "totalHashrate": 906685230.8799996
+  },
+  {
+    "timestamp": 1725985020473,
+    "totalHashrate": 906996375.9800023
+  },
+  {
+    "timestamp": 1725985110615,
+    "totalHashrate": 907053497.2800006
+  },
+  {
+    "timestamp": 1725985200502,
+    "totalHashrate": 905505121.4699944
+  },
+  {
+    "timestamp": 1725985290674,
+    "totalHashrate": 905911646.3499986
+  },
+  {
+    "timestamp": 1725985380494,
+    "totalHashrate": 905738745.5299991
+  },
+  {
+    "timestamp": 1725985480565,
+    "totalHashrate": 905315859.0899985
+  },
+  {
+    "timestamp": 1725985562427,
+    "totalHashrate": 905203009.6299993
+  },
+  {
+    "timestamp": 1725985651314,
+    "totalHashrate": 905037441.399999
+  },
+  {
+    "timestamp": 1725985742134,
+    "totalHashrate": 905145938.289999
+  },
+  {
+    "timestamp": 1725985831048,
+    "totalHashrate": 905547149.9799966
+  }
+]
